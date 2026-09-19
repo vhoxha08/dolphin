@@ -36,7 +36,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "org.dolphinemu.dolphinemu"
+        applicationId = "org.dolphinemu.dolphinemu.vhoxha"
         minSdk = 24
         targetSdk = 37
 
@@ -69,7 +69,7 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
 
-            resValue("string", "app_name_suffixed", "Dolphin Emulator")
+            resValue("string", "app_name_suffixed", "Dolphin (Fork)")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
