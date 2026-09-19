@@ -1,0 +1,169 @@
+name: Android APK
+
+on:
+  push:
+    branches: ['**']
+    paths-ignore:
+      - 'docs/**'
+      - 'Languages/**'
+      - '**.md'
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Which APK to build'
+        type: choice
+        default: debug
+        options: [debug, release, both]
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    env:
+      # Gradle invokes the repo-root CMakeLists.txt and builds the whole native
+      # emulator; ccache is what keeps re-runs from taking the better part of an hour.
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 2G
+      # Keep the ccache hit rate up despite the build dir path varying between runs.
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: time_macros,include_file_mtime,include_file_ctime
+      NDK_VERSION: '30.0.15729638'
+      BUILD_TYPE: ${{ github.event.inputs.build_type || 'debug' }}
+      # Step-level `if` cannot read the secrets context, so surface it here.
+      HAVE_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
+
+    steps:
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk \
+                      /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          df -h /
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # versionName/versionCode/GIT_HASH are derived from git describe and the
+          # commit count, so the full history (and tags) has to be present.
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install ccache
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache ninja-build
+          ccache --version
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-android-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-android-${{ github.ref_name }}-
+            ccache-android-
+
+      - name: Install NDK and CMake
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+
+          # app/build.gradle.kts asks for "3.25.0+"; install the newest SDK CMake
+          # that satisfies it rather than pinning a package that may disappear.
+          CMAKE_PKG=$("$SDKMANAGER" --list 2>/dev/null \
+            | awk -F'|' '/^ *cmake;/ {gsub(/ /,"",$1); print $1}' \
+            | sort -u -V | tail -n1)
+          CMAKE_VER=${CMAKE_PKG#cmake;}
+          if [ -z "$CMAKE_PKG" ] || [ "$(printf '%s\n' 3.25.0 "$CMAKE_VER" | sort -V | head -n1)" != "3.25.0" ]; then
+            echo "::warning::No SDK CMake >= 3.25 available; falling back to the system cmake ($(cmake --version | head -n1))."
+            CMAKE_PKG=""
+          fi
+
+          echo "Installing ndk;$NDK_VERSION ${CMAKE_PKG:+and $CMAKE_PKG}"
+          "$SDKMANAGER" --channel=3 --install "ndk;$NDK_VERSION" ${CMAKE_PKG:+"$CMAKE_PKG"}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: false
+          cache-read-only: ${{ github.ref_name != 'master' }}
+
+      - name: Decode release keystore
+        if: env.BUILD_TYPE != 'debug' && env.HAVE_KEYSTORE == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      - name: Build debug APK
+        if: env.BUILD_TYPE == 'debug' || env.BUILD_TYPE == 'both'
+        working-directory: Source/Android
+        run: ./gradlew assembleDebug
+
+      - name: Build release APK
+        if: env.BUILD_TYPE == 'release' || env.BUILD_TYPE == 'both'
+        working-directory: Source/Android
+        env:
+          STOREPASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYPASS: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Without a keystore this still builds, but the APK comes out unsigned.
+          if [ -n "${KEYSTORE_PATH:-}" ]; then
+            ./gradlew assembleRelease \
+              "-Pkeystore=$KEYSTORE_PATH" \
+              "-Pstorepass=$STOREPASS" \
+              "-Pkeyalias=$KEYALIAS" \
+              "-Pkeypass=$KEYPASS"
+          else
+            echo "::warning::No KEYSTORE_BASE64 secret set - producing an unsigned release APK."
+            ./gradlew assembleRelease
+          fi
+
+      - name: ccache statistics
+        if: always()
+        run: ccache --show-stats
+
+      - name: Upload debug APK
+        if: env.BUILD_TYPE == 'debug' || env.BUILD_TYPE == 'both'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dolphin-debug-${{ github.sha }}
+          path: Source/Android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload release APK
+        if: env.BUILD_TYPE == 'release' || env.BUILD_TYPE == 'both'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dolphin-release-${{ github.sha }}
+          path: Source/Android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload native build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ github.sha }}
+          path: |
+            Source/Android/app/.cxx/**/*.txt
+            Source/Android/app/.cxx/**/*.log
+            Source/Android/app/build/reports/**
+          if-no-files-found: ignore
