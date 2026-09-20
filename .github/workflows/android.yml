@@ -2,7 +2,9 @@ name: Android APK
 
 on:
   push:
-    branches: ['**']
+    branches-ignore:
+      # master is a pristine mirror of upstream/master; upstream builds it already.
+      - master
     paths-ignore:
       - 'docs/**'
       - 'Languages/**'
@@ -102,7 +104,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           build-scan-publish: false
-          cache-read-only: ${{ github.ref_name != 'master' }}
+          # Only the main fork branch writes the dependency cache.
+          cache-read-only: ${{ github.ref_name != 'development' }}
 
       - name: Decode release keystore
         if: env.BUILD_TYPE != 'debug' && env.HAVE_KEYSTORE == 'true'
@@ -125,7 +128,8 @@ jobs:
           KEYALIAS: ${{ secrets.KEY_ALIAS }}
           KEYPASS: ${{ secrets.KEY_PASSWORD }}
         run: |
-          # Without a keystore this still builds, but the APK comes out unsigned.
+          # Without a keystore the release variant falls back to the debug key
+          # (see app/build.gradle.kts), so the APK is installable but not publishable.
           if [ -n "${KEYSTORE_PATH:-}" ]; then
             ./gradlew assembleRelease \
               "-Pkeystore=$KEYSTORE_PATH" \
@@ -133,7 +137,7 @@ jobs:
               "-Pkeyalias=$KEYALIAS" \
               "-Pkeypass=$KEYPASS"
           else
-            echo "::warning::No KEYSTORE_BASE64 secret set - producing an unsigned release APK."
+            echo "::warning::No KEYSTORE_BASE64 secret set - release APK will be signed with the debug key."
             ./gradlew assembleRelease
           fi
 
