@@ -28,4 +28,5 @@
     <color name="dolphin_inverseSurface">#E2E2E6</color>
     <color name="dolphin_inversePrimary">#0061A4</color>
     <color name="dolphin_shadow">#000000</color>
+    <color name="cheevo_card_background">#12FFFFFF</color>
 </resources>

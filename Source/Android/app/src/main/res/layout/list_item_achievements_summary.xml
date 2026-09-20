@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon of the selected subset on the left, its title and progress on the right. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="@dimen/spacing_small"
+    android:paddingBottom="@dimen/spacing_medlarge">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_game_badge"
+        android:layout_width="@dimen/achievement_game_badge_size"
+        android:layout_height="@dimen/achievement_game_badge_size"
+        android:layout_marginEnd="@dimen/spacing_medlarge"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Dolphin.AchievementBadge"
+        tools:src="@drawable/no_banner" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/text_game_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAlignment="viewStart"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="20sp"
+            tools:text="Rhythm Heaven Fever" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progress_achievements"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_small"
+            app:indicatorColor="@color/cheevo_progress_indicator"
+            app:trackColor="@color/cheevo_progress_track"
+            app:trackThickness="6dp"
+            app:indicatorTrackGapSize="0dp"
+            tools:progress="40" />
+
+        <TextView
+            android:id="@+id/text_achievements"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_small"
+            android:textAlignment="viewStart"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="14sp"
+            tools:text="12/30 achievements unlocked" />
+
+        <TextView
+            android:id="@+id/text_points"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="14sp"
+            tools:text="145/400 points earned" />
+
+    </LinearLayout>
+
+</LinearLayout>

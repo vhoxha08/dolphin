@@ -34,6 +34,35 @@
         <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
     </style>
 
+    <style name="FullscreenDialog" parent="ThemeOverlay.Material3.Dialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
+    </style>
+
+    <style name="AchievementBadge">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_achievement_badge</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:paddingTop">1dp</item>
+        <item name="android:paddingBottom">1dp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ShapeAppearance.Dolphin.AchievementBadge" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/spacing_medlarge</item>
+    </style>
+
     <style name="DialogAnimation">
         <item name="android:windowEnterAnimation">@anim/fade_in</item>
         <item name="android:windowExitAnimation">@anim/fade_out</item>

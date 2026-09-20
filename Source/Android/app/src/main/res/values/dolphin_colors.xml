@@ -41,4 +41,16 @@
     <color name="invalid_setting_overlay">#36ff0000</color>
 
     <color name="background_black">#000000</color>
+
+    <color name="cheevo_progress_track">#737373</color>
+    <color name="cheevo_progress_indicator">#F59E0B</color>
+
+    <color name="cheevo_badge_missable">#B45309</color>
+    <color name="cheevo_badge_progression">#1D4ED8</color>
+    <color name="cheevo_badge_win">#15803D</color>
+    <color name="cheevo_hardcore_ring">#FFD700</color>
+
+    <!-- Tints whatever is behind it rather than being a fixed tone, so the card stays subtle in
+         every theme, including dynamic colour. Overridden in values-night. -->
+    <color name="cheevo_card_background">#0A000000</color>
 </resources>

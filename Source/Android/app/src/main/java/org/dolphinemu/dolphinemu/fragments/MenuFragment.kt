@@ -125,6 +125,8 @@ class MenuFragment : Fragment(), View.OnClickListener {
         // will block the load and send a message to the screen.
         binding.menuQuickload.paint.isStrikeThruText = hardcoreEnabled
         binding.menuEmulationLoadRoot.paint.isStrikeThruText = hardcoreEnabled
+        binding.menuAchievementsShow.visibility =
+            if (AchievementModel.isGameLoaded()) View.VISIBLE else View.GONE
     }
 
     override fun onDestroyView() {
@@ -204,6 +206,10 @@ class MenuFragment : Fragment(), View.OnClickListener {
             buttonsActionsMap.append(
                 R.id.menu_infinity_base,
                 EmulationActivity.MENU_ACTION_INFINITY_BASE
+            )
+            buttonsActionsMap.append(
+                R.id.menu_achievements_show,
+                EmulationActivity.MENU_ACTION_ACHIEVEMENTS
             )
         }
 

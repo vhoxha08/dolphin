@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <corners android:radius="@dimen/spacing_medlarge" />
+    <!-- A translucent tint rather than a solid tone, so the contrast stays very low. -->
+    <solid android:color="@color/cheevo_card_background" />
+</shape>

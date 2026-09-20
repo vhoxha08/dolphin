@@ -51,6 +51,12 @@ static jmethodID s_netplay_on_traversal_state_changed;
 static jclass s_netplay_player_class;
 static jmethodID s_netplay_player_constructor;
 
+static jclass s_achievement_class;
+static jmethodID s_achievement_constructor;
+
+static jclass s_achievement_subset_class;
+static jmethodID s_achievement_subset_constructor;
+
 static jclass s_analytics_class;
 static jmethodID s_get_analytics_value;
 
@@ -364,6 +370,26 @@ jclass GetNetplayPlayerClass()
 jmethodID GetNetplayPlayerConstructor()
 {
   return s_netplay_player_constructor;
+}
+
+jclass GetAchievementClass()
+{
+  return s_achievement_class;
+}
+
+jmethodID GetAchievementConstructor()
+{
+  return s_achievement_constructor;
+}
+
+jclass GetAchievementSubsetClass()
+{
+  return s_achievement_subset_class;
+}
+
+jmethodID GetAchievementSubsetConstructor()
+{
+  return s_achievement_subset_constructor;
 }
 
 jclass GetPairClass()
@@ -814,6 +840,23 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
                        "(ILjava/lang/String;Ljava/lang/String;IZLjava/lang/String;)V");
   env->DeleteLocalRef(netplay_player_class);
 
+  const jclass achievement_class =
+      env->FindClass("org/dolphinemu/dolphinemu/features/settings/model/Achievement");
+  s_achievement_class = reinterpret_cast<jclass>(env->NewGlobalRef(achievement_class));
+  s_achievement_constructor = env->GetMethodID(
+      achievement_class, "<init>",
+      "(ILjava/lang/String;Ljava/lang/String;IILjava/lang/String;Ljava/lang/String;III)V");
+  env->DeleteLocalRef(achievement_class);
+
+  const jclass achievement_subset_class =
+      env->FindClass("org/dolphinemu/dolphinemu/features/settings/model/AchievementSubset");
+  s_achievement_subset_class =
+      reinterpret_cast<jclass>(env->NewGlobalRef(achievement_subset_class));
+  s_achievement_subset_constructor =
+      env->GetMethodID(achievement_subset_class, "<init>",
+                       "(ILjava/lang/String;Ljava/lang/String;)V");
+  env->DeleteLocalRef(achievement_subset_class);
+
   const jclass analytics_class = env->FindClass("org/dolphinemu/dolphinemu/utils/Analytics");
   s_analytics_class = reinterpret_cast<jclass>(env->NewGlobalRef(analytics_class));
   s_get_analytics_value = env->GetStaticMethodID(s_analytics_class, "getValue",
@@ -1029,6 +1072,8 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved)
   env->DeleteGlobalRef(s_game_file_cache_class);
   env->DeleteGlobalRef(s_netplay_session_class);
   env->DeleteGlobalRef(s_netplay_player_class);
+  env->DeleteGlobalRef(s_achievement_class);
+  env->DeleteGlobalRef(s_achievement_subset_class);
   env->DeleteGlobalRef(s_analytics_class);
   env->DeleteGlobalRef(s_pair_class);
   env->DeleteGlobalRef(s_hash_map_class);

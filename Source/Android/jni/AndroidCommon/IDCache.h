@@ -54,6 +54,12 @@ jmethodID GetNetplayOnTraversalStateChanged();
 jclass GetNetplayPlayerClass();
 jmethodID GetNetplayPlayerConstructor();
 
+jclass GetAchievementClass();
+jmethodID GetAchievementConstructor();
+
+jclass GetAchievementSubsetClass();
+jmethodID GetAchievementSubsetConstructor();
+
 jclass GetPairClass();
 jmethodID GetPairConstructor();
 
